@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SGX Immersive Experience</title>
+    <!-- Core Engine: A-Frame -->
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <style>
+        body, html { margin: 0; padding: 0; overflow: hidden; background-color: #050505; width: 100%; height: 100%; }
+        /* Posición global del botón VR por defecto en Quest */
+        .a-enter-vr { bottom: 20px !important; right: 20px !important; }
+    </style>
+</head>
+<body>
+
+    <a-scene loading-screen="dotsColor: #FDCC0D; backgroundColor: #050505" 
+             renderer="antialias: true; colorManagement: true;"
+             vr-mode-ui="enabled: true">
+        
+        <a-assets>
+            <video id="media-content" crossorigin="anonymous" playsinline webkit-playsinline loop muted autoplay preload="auto">
+                <source src="https://video.wixstatic.com/video/fe81a7_43b5f0392f21460b936562ecf6c2422b/1080p/mp4/file.mp4" type="video/mp4">
+            </video>
+        </a-assets>
+
+        <a-videosphere src="#media-content" rotation="0 -90 0"></a-videosphere>
+        
+        <!-- Rotación Cinemática Suave -->
+        <a-entity id="rig" animation="property: rotation; to: 0 -360 0; loop: true; dur: 120000; easing: linear;">
+            <a-entity camera look-controls="reverseMouseDrag: true" position="0 1.6 0"></a-entity>
+        </a-entity>
+
+    </a-scene>
+
+    <script>
+        // Lógica de Arranque Automático para forzar texturas en móviles/VR browsers
+        document.addEventListener('DOMContentLoaded', () => {
+            const mediaEl = document.getElementById('media-content');
+            if(mediaEl && mediaEl.tagName === 'VIDEO') {
+                mediaEl.play().catch(error => {
+                    console.log("Sistema bloqueando autoplay. Requiere interacción.", error);
+                    document.body.addEventListener('touchstart', () => { mediaEl.play(); }, { once: true });
+                    document.body.addEventListener('click', () => { mediaEl.play(); }, { once: true });
+                });
+            }
+        });
+    </script>
+</body>
+</html>
