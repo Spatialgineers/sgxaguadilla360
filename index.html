@@ -6,10 +6,52 @@
     <title>SGX Immersive Experience</title>
     <!-- Core Engine: A-Frame -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body, html { margin: 0; padding: 0; overflow: hidden; background-color: #050505; width: 100%; height: 100%; }
+        body, html { margin: 0; padding: 0; overflow: hidden; background-color: #050505; width: 100%; height: 100%; font-family: monospace; }
         /* Posición global del botón VR por defecto en Quest */
-        .a-enter-vr { bottom: 20px !important; right: 20px !important; }
+        .a-enter-vr { bottom: 20px !important; right: 20px !important; z-index: 10000; }
+        
+        /* SGX Standalone Controls UI */
+        #sgx-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 9999;
+            background: rgba(17, 17, 17, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 12px 24px;
+            border-radius: 100px;
+            border: 1px solid rgba(253, 204, 13, 0.4);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: opacity 0.3s;
+        }
+        .ctrl-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            outline: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .ctrl-btn:hover {
+            background: rgba(253, 204, 13, 0.2);
+            color: #FDCC0D;
+        }
+        .ctrl-active {
+            color: #FDCC0D;
+        }
     </style>
 </head>
 <body>
@@ -32,16 +74,68 @@
         </a-entity>
 
     </a-scene>
+    
+    <!-- Controles Flotantes SGX (Desaparecen en VR) -->
+    <div id="sgx-controls">
+        <button id="btn-play" class="ctrl-btn"><i class="fas fa-pause"></i></button>
+        <button id="btn-mute" class="ctrl-btn"><i class="fas fa-volume-mute"></i></button>
+    </div>
 
     <script>
-        // Lógica de Arranque Automático para forzar texturas en móviles/VR browsers
         document.addEventListener('DOMContentLoaded', () => {
             const mediaEl = document.getElementById('media-content');
+            const sceneEl = document.querySelector('a-scene');
+            const controlsUI = document.getElementById('sgx-controls');
+            
+            // Ocultar controles al entrar en modo inmersivo (Meta Quest)
+            sceneEl.addEventListener('enter-vr', () => {
+                if(controlsUI) controlsUI.style.display = 'none';
+            });
+            sceneEl.addEventListener('exit-vr', () => {
+                if(controlsUI) controlsUI.style.display = 'flex';
+                // Forzar reproducción al salir para evitar pausas indeseadas
+                if(mediaEl && mediaEl.tagName === 'VIDEO' && !mediaEl.paused) {
+                    mediaEl.play().catch(e => console.warn(e));
+                }
+            });
+
             if(mediaEl && mediaEl.tagName === 'VIDEO') {
-                mediaEl.play().catch(error => {
+                const btnPlay = document.getElementById('btn-play');
+                const btnMute = document.getElementById('btn-mute');
+                let isPlaying = false;
+
+                // Forzar arranque inicial (Autoplay en móviles requiere interacción a veces)
+                mediaEl.play().then(() => {
+                    isPlaying = true;
+                    btnPlay.innerHTML = '<i class="fas fa-pause"></i>';
+                }).catch(error => {
                     console.log("Sistema bloqueando autoplay. Requiere interacción.", error);
-                    document.body.addEventListener('touchstart', () => { mediaEl.play(); }, { once: true });
-                    document.body.addEventListener('click', () => { mediaEl.play(); }, { once: true });
+                    btnPlay.innerHTML = '<i class="fas fa-play"></i>';
+                });
+
+                // Lógica Botón Play/Pause
+                btnPlay.addEventListener('click', () => {
+                    if (mediaEl.paused) {
+                        mediaEl.play();
+                        isPlaying = true;
+                        btnPlay.innerHTML = '<i class="fas fa-pause"></i>';
+                    } else {
+                        mediaEl.pause();
+                        isPlaying = false;
+                        btnPlay.innerHTML = '<i class="fas fa-play"></i>';
+                    }
+                });
+
+                // Lógica Botón Mute/Unmute
+                btnMute.addEventListener('click', () => {
+                    mediaEl.muted = !mediaEl.muted;
+                    if (mediaEl.muted) {
+                        btnMute.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                        btnMute.classList.remove('ctrl-active');
+                    } else {
+                        btnMute.innerHTML = '<i class="fas fa-volume-up"></i>';
+                        btnMute.classList.add('ctrl-active');
+                    }
                 });
             }
         });
