@@ -62,14 +62,14 @@
         
         <a-assets>
             <video id="media-content" crossorigin="anonymous" playsinline webkit-playsinline loop muted autoplay preload="auto">
-                <source src="https://video.wixstatic.com/video/fe81a7_43b5f0392f21460b936562ecf6c2422b/1080p/mp4/file.mp4" type="video/mp4">
+                <source src="https://video.wixstatic.com/video/fe81a7_5aedd69a9660482bb9f99de469e33c40/1080p/mp4/file.mp4" type="video/mp4">
             </video>
         </a-assets>
 
-        <a-videosphere src="#media-content" rotation="0 -90 0"></a-videosphere>
+        <a-video src="#media-content" width="16" height="9" position="0 2 -8"></a-video>
         
-        <!-- Rotación Cinemática Suave -->
-        <a-entity id="rig" animation="property: rotation; to: 0 -360 0; loop: true; dur: 120000; easing: linear;">
+        <!-- Cámara Estática para Visualización de Pantalla -->
+        <a-entity id="rig">
             <a-entity camera look-controls="reverseMouseDrag: true" position="0 1.6 0"></a-entity>
         </a-entity>
 
